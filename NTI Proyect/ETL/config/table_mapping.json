@@ -1,0 +1,132 @@
+{
+  "mappings": [
+    {
+      "source_table": "Locations",
+      "target_table": "Employees",
+      "field_mapping": {
+        "location_id": "EmployeeID",
+        "street_addr": "Address",
+        "municipality": "City",
+        "region_code": "Region",
+        "postal_code": "PostalCode"
+      },
+      "transformations": {
+        "region_code": "UPPER(region_code)", 
+        "postal_code": "CAST(postal_code AS NVARCHAR)"
+      },
+      "validations": {
+        "location_id": "IS NOT NULL AND location_id > 0",
+        "street_addr": "LENGTH(street_addr) <= 100",
+        "municipality": "LENGTH(municipality) <= 50",
+        "region_code": "REGEXP_MATCH(region_code, '^[A-Z]{2}$')",
+        "postal_code": "REGEXP_MATCH(postal_code, '^[0-9]{5}(-[0-9]{4})?$')"
+      }
+    },
+    {
+      "source_table": "Entities",
+      "target_table": "Customers",
+      "field_mapping": {
+        "entity_id": "CustomerID",
+        "entity_label": "CompanyName",
+        "type_flag": "ContactTitle",
+        "location_ref": "City",
+        "contact_info": "Phone"
+      },
+      "transformations": {
+        "type_flag": "CASE WHEN type_flag = 'A' THEN 'Customer' ELSE 'Vendor' END",
+        "contact_info": "CAST(contact_info AS NVARCHAR)"
+      },
+      "validations": {
+        "entity_id": "IS NOT NULL AND entity_id > 0",
+        "entity_label": "LENGTH(entity_label) <= 100",
+        "type_flag": "IN ('A', 'B')",
+        "location_ref": "IS NOT NULL AND location_ref > 0",
+        "contact_info": "REGEXP_MATCH(contact_info, '^[0-9-]+$')"
+      }
+    },
+    {
+      "source_table": "Items",
+      "target_table": "Products",
+      "field_mapping": {
+        "item_id": "ProductID",
+        "label": "ProductName",
+        "source_ref": "SupplierID",
+        "group_ref": "CategoryID",
+        "cost": "UnitPrice",
+        "qty_available": "UnitsInStock"
+      },
+      "transformations": {
+        "cost": "REPLACE(cost, '$', '')::MONEY"
+      },
+      "validations": {
+        "item_id": "IS NOT NULL AND item_id > 0",
+        "label": "LENGTH(label) <= 100",
+        "source_ref": "IS NOT NULL AND source_ref > 0",
+        "group_ref": "IS NOT NULL AND group_ref > 0",
+        "cost": "REGEXP_MATCH(cost, '^\\$?\\d+(\\.\\d{2})?$')",
+        "qty_available": "IS NOT NULL AND qty_available >= 0"
+      }
+    },
+    {
+      "source_table": "Batches",
+      "target_table": "Orders",
+      "field_mapping": {
+        "batch_id": "OrderID",
+        "batch_date": "OrderDate",
+        "reference_id": "CustomerID",
+        "total_value": "Freight"
+      },
+      "transformations": {
+        "batch_date": "FROM_UNIXTIME(batch_date)",
+        "total_value": "CAST(REPLACE(total_value, ' USD', '') AS MONEY)"        
+      },
+      "validations": {
+        "batch_id": "IS NOT NULL AND batch_id > 0",
+        "batch_date": "IS NOT NULL AND batch_date > 0",        
+        "reference_id": "IS NOT NULL AND reference_id > 0",
+        "total_value": "REGEXP_MATCH(total_value, '^\\d+(\\.\\d{2})?\\sUSD$')"
+      }
+    },
+    {
+      "source_table": "Transactions",
+      "target_table": "Order Details",
+      "field_mapping": {
+        "transaction_id": "OrderID",
+        "batch_ref": "OrderID",
+        "item_ref": "ProductID",
+        "partner_ref": "EmployeeID",
+        "qty": "Quantity",
+        "date_key": "ShippedDate",
+        "amount": "Discount"
+      },
+      "transformations": {
+        "date_key": "FROM_UNIXTIME(date_key)",
+        "amount": "CAST(REPLACE(amount, '%', '') AS FLOAT) / 100"
+      },
+      "validations": {
+        "transaction_id": "IS NOT NULL AND transaction_id > 0",
+        "batch_ref": "IS NOT NULL AND batch_ref > 0",
+        "item_ref": "IS NOT NULL AND item_ref > 0",
+        "partner_ref": "IS NOT NULL AND partner_ref > 0",
+        "qty": "IS NOT NULL AND qty >= 0",
+        "date_key": "IS NOT NULL AND date_key > 0",
+        "amount": "REGEXP_MATCH(amount, '^\\d+(\\.\\d{1,2})?%$')"
+      }
+    },
+    {
+      "source_table": "Calendar",
+      "target_table": "Suppliers",
+      "field_mapping": {
+        "date_key": "SupplierID",
+        "readable_date": "RegionDescription"
+      },
+      "transformations": {
+        "readable_date": "to_datetime"
+      },
+      "validations": {
+        "date_key": "IS NOT NULL AND date_key > 0",
+        "readable_date": "REGEXP_MATCH(readable_date, '^\\d{4}-\\d{2}-\\d{2}$')"
+      }
+    }
+  ]
+}

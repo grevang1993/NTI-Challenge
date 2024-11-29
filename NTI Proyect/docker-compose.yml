@@ -1,0 +1,38 @@
+version: "3.8"
+
+
+services:
+  mysql:
+    build:
+      context: ./mysql
+    container_name: mysql_container
+    ports:
+      - "3307:3306"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: AlliantCustomer
+      MYSQL_USER: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+
+  azure-sql-edge:
+    build:
+      context: ./azure-sql-edge
+    container_name: azure_sql_edge_container
+    ports:
+      - "1433:1433"
+    environment:
+      SA_PASSWORD: StrongPassword123
+      ACCEPT_EULA: "1"
+
+    volumes:
+      - azure_sql_edge_data:/var/opt/mssql
+
+
+               
+
+volumes:
+  mysql_data:
+  azure_sql_edge_data:
